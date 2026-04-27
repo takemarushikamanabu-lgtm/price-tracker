@@ -1,16 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
-
+ 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase環境変数が設定されていません。.envファイルを確認してください。')
-}
-
+ 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
-
+ 
+// 現在のユーザーIDを取得
+async function getUserId() {
+  const { data } = await supabase.auth.getUser()
+  return data?.user?.id
+}
+ 
 // ===== Products =====
-
+ 
 export async function getProducts() {
   const { data, error } = await supabase
     .from('product_price_summary')
@@ -19,7 +21,7 @@ export async function getProducts() {
   if (error) throw error
   return data
 }
-
+ 
 export async function getProduct(id) {
   const { data, error } = await supabase
     .from('products')
@@ -29,17 +31,18 @@ export async function getProduct(id) {
   if (error) throw error
   return data
 }
-
+ 
 export async function createProduct(product) {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('products')
-    .insert(product)
+    .insert({ ...product, user_id: userId })
     .select()
     .single()
   if (error) throw error
   return data
 }
-
+ 
 export async function updateProduct(id, updates) {
   const { data, error } = await supabase
     .from('products')
@@ -50,7 +53,7 @@ export async function updateProduct(id, updates) {
   if (error) throw error
   return data
 }
-
+ 
 export async function deleteProduct(id) {
   const { error } = await supabase
     .from('products')
@@ -58,9 +61,9 @@ export async function deleteProduct(id) {
     .eq('id', id)
   if (error) throw error
 }
-
+ 
 // ===== Price Records =====
-
+ 
 export async function getPriceRecords(productId) {
   const { data, error } = await supabase
     .from('price_records')
@@ -71,17 +74,18 @@ export async function getPriceRecords(productId) {
   if (error) throw error
   return data
 }
-
+ 
 export async function createPriceRecord(record) {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('price_records')
-    .insert(record)
+    .insert({ ...record, user_id: userId })
     .select()
     .single()
   if (error) throw error
   return data
 }
-
+ 
 export async function deletePriceRecord(id) {
   const { error } = await supabase
     .from('price_records')
@@ -89,33 +93,27 @@ export async function deletePriceRecord(id) {
     .eq('id', id)
   if (error) throw error
 }
-
-// ===== Bulk insert from OCR =====
-
+ 
 export async function bulkCreatePriceRecords(records) {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('price_records')
-    .insert(records)
+    .insert(records.map(r => ({ ...r, user_id: userId })))
     .select()
   if (error) throw error
   return data
 }
-
-// ===== Stats =====
-
+ 
 export async function getRecentRecords(limit = 20) {
   const { data, error } = await supabase
     .from('price_records')
-    .select(`
-      *,
-      products(name, code, unit)
-    `)
+    .select(`*, products(name, code, unit)`)
     .order('created_at', { ascending: false })
     .limit(limit)
   if (error) throw error
   return data
 }
-
+ 
 export async function getCategories() {
   const { data, error } = await supabase
     .from('products')
@@ -124,3 +122,4 @@ export async function getCategories() {
   const cats = [...new Set(data.map(d => d.category).filter(Boolean))]
   return cats
 }
+ 
