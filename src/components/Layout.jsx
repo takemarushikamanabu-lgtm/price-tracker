@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Package, ScanLine, TrendingDown } from 'lucide-react'
+import { LayoutDashboard, Package, ScanLine, TrendingDown, LogOut } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'ダッシュボード' },
@@ -7,7 +8,14 @@ const navItems = [
   { to: '/ocr', icon: ScanLine, label: 'OCR入力' },
 ]
 
-export default function Layout({ children }) {
+export default function Layout({ children, session }) {
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+
+  const email = session?.user?.email || ''
+  const initial = email.charAt(0).toUpperCase()
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)' }}>
       <aside style={{
@@ -16,6 +24,7 @@ export default function Layout({ children }) {
         flexDirection: 'column', position: 'fixed', top: 0, left: 0,
         height: '100vh', zIndex: 50,
       }}>
+        {/* Logo */}
         <div style={{
           padding: '20px 20px 16px', borderBottom: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', gap: 10,
@@ -35,6 +44,8 @@ export default function Layout({ children }) {
             </div>
           </div>
         </div>
+
+        {/* Nav */}
         <nav style={{ padding: '12px 8px', flex: 1 }}>
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -56,12 +67,37 @@ export default function Layout({ children }) {
             </NavLink>
           ))}
         </nav>
-        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
-          <p style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
-            データはSupabaseと同期中
-          </p>
+
+        {/* User info & logout */}
+        <div style={{ padding: '12px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%', background: 'rgba(245,158,11,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 600, color: 'var(--accent)', flexShrink: 0,
+            }}>
+              {initial}
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {email}
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border)',
+              background: 'transparent', color: 'var(--text-muted)', fontSize: 12,
+              cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--red)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+          >
+            <LogOut size={12} /> ログアウト
+          </button>
         </div>
       </aside>
+
       <main style={{
         marginLeft: 220, flex: 1, padding: '32px 36px',
         minHeight: '100vh', maxWidth: 'calc(100vw - 220px)',
