@@ -18,9 +18,7 @@
   --blue: #3B82F6;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   background-color: var(--bg-base);
@@ -29,13 +27,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-/* Input base */
 input, select, textarea {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
@@ -47,29 +43,52 @@ input, select, textarea {
   transition: border-color 0.15s;
   outline: none;
 }
-input:focus, select:focus, textarea:focus {
-  border-color: var(--accent);
-}
-input::placeholder, textarea::placeholder {
-  color: var(--text-muted);
-}
+input:focus, select:focus { border-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+input[type="number"] { font-family: 'IBM Plex Mono', monospace; }
 
-/* Number inputs in mono */
-input[type="number"] {
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.fade-in { animation: fadeIn 0.2s ease-out; }
 
-.fade-in {
-  animation: fadeIn 0.2s ease-out;
+/* ===== レスポンシブ ===== */
+
+/* PC: サイドバー表示、ボトムナビ非表示 */
+.sidebar { display: flex; }
+.bottom-nav { display: none; }
+.main-content { margin-left: 220px; padding: 32px 36px; }
+
+/* スマホ: サイドバー非表示、ボトムナビ表示 */
+@media (max-width: 768px) {
+  .sidebar { display: none !important; }
+  .bottom-nav { display: flex !important; }
+  .main-content {
+    margin-left: 0 !important;
+    padding: 16px 14px 80px !important;
+    max-width: 100% !important;
+  }
+
+  /* テーブルをカード形式に */
+  .pc-table { display: none !important; }
+  .mobile-cards { display: block !important; }
+
+  /* 統計グリッド2列 */
+  .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+
+  /* モーダル */
+  .modal-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    max-height: 90vh !important;
+  }
+  .modal-overlay { align-items: flex-end !important; }
 }
 
-@keyframes pulse-border {
-  0%, 100% { border-color: var(--accent); }
-  50% { border-color: var(--accent-dim); }
-}
+/* PC: カード非表示 */
+.mobile-cards { display: none; }
