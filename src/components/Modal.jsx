@@ -10,16 +10,17 @@ export default function Modal({ title, onClose, children, width = 480 }) {
 
   return (
     <div
+      className="modal-overlay"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 100,
+        position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(0,0,0,0.7)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20,
       }}
     >
       <div
-        className="fade-in"
+        className="modal-inner fade-in"
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid var(--border)',
@@ -30,7 +31,6 @@ export default function Modal({ title, onClose, children, width = 480 }) {
           overflowY: 'auto',
         }}
       >
-        {/* Header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '16px 20px',
