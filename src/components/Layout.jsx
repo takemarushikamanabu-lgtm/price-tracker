@@ -1,15 +1,65 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Package, ScanLine, TrendingDown, LogOut } from 'lucide-react'
+import { useState } from 'react'
+import { TrendingDown, LogOut, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'ホーム', emoji: '📊' },
-  { to: '/products', icon: Package, label: '商品', emoji: '📦' },
-  { to: '/ocr', icon: ScanLine, label: 'OCR', emoji: '🔍' },
+  { to: '/', label: 'ホーム', emoji: '📊' },
+  { to: '/products', label: '商品', emoji: '📦' },
+  { to: '/ocr', label: 'OCR', emoji: '🔍' },
 ]
+
+function SettingsSheet({ session, onClose }) {
+  const email = session?.user?.email || ''
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 300,
+        background: 'rgba(0,0,0,0.6)',
+        display: 'flex', alignItems: 'flex-end',
+      }}
+    >
+      <div style={{
+        width: '100%', background: 'var(--bg-surface)',
+        borderRadius: '16px 16px 0 0',
+        border: '1px solid var(--border)',
+        padding: '20px',
+        paddingBottom: 'calc(20px + env(safe-area-inset-bottom))',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>設定</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}>
+            <X size={18} />
+          </button>
+        </div>
+        <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px' }}>ログイン中のアカウント</p>
+          <p style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>{email}</p>
+        </div>
+        <button
+          onClick={handleLogout}
+          style={{
+            width: '100%', padding: '13px', borderRadius: 10,
+            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+            color: 'var(--red)', fontSize: 14, fontWeight: 500,
+            cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          <LogOut size={16} /> ログアウト
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function Layout({ children, session }) {
   const location = useLocation()
+  const [showSettings, setShowSettings] = useState(false)
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -32,10 +82,7 @@ export default function Layout({ children, session }) {
           padding: '20px 20px 16px', borderBottom: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
-          <div style={{
-            width: 32, height: 32, background: 'var(--accent)', borderRadius: 8,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <div style={{ width: 32, height: 32, background: 'var(--accent)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <TrendingDown size={18} color="#000" strokeWidth={2.5} />
           </div>
           <div>
@@ -45,7 +92,7 @@ export default function Layout({ children, session }) {
         </div>
 
         <nav style={{ padding: '12px 8px', flex: 1 }}>
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.map(({ to, emoji, label }) => (
             <NavLink key={to} to={to} end={to === '/'}
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -54,32 +101,19 @@ export default function Layout({ children, session }) {
                 fontWeight: isActive ? 600 : 400,
                 color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
                 background: isActive ? 'rgba(245,158,11,0.1)' : 'transparent',
-                transition: 'all 0.15s',
               })}
             >
-              <Icon size={16} strokeWidth={2} />
-              {label}
+              <span>{emoji}</span>{label}
             </NavLink>
           ))}
         </nav>
 
         <div style={{ padding: '12px', borderTop: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: '50%', background: 'rgba(245,158,11,0.2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 600, color: 'var(--accent)', flexShrink: 0,
-            }}>{initial}</div>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {email}
-            </p>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: 'var(--accent)', flexShrink: 0 }}>{initial}</div>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</p>
           </div>
-          <button onClick={handleLogout} style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 6,
-            padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border)',
-            background: 'transparent', color: 'var(--text-muted)', fontSize: 12,
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}>
+          <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
             <LogOut size={12} /> ログアウト
           </button>
         </div>
@@ -96,13 +130,6 @@ export default function Layout({ children, session }) {
         background: 'var(--bg-surface)', borderTop: '0.5px solid var(--border)',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
-        {/* ユーザー情報（スマホ）*/}
-        <div style={{
-          position: 'absolute', top: -36, right: 12,
-          display: 'flex', alignItems: 'center', gap: 6,
-        }}>
-        </div>
-
         <div style={{ display: 'flex' }}>
           {navItems.map(({ to, label, emoji }) => {
             const isActive = to === '/'
@@ -112,28 +139,34 @@ export default function Layout({ children, session }) {
               <NavLink key={to} to={to} end={to === '/'}
                 style={{
                   flex: 1, display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', gap: 3, padding: '8px 0 4px',
+                  alignItems: 'center', gap: 4, padding: '10px 0 6px',
                   textDecoration: 'none',
                 }}
               >
-                <span style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</span>
-                <span style={{ fontSize: 10, color: isActive ? 'var(--accent)' : 'var(--text-muted)', fontWeight: isActive ? 600 : 400 }}>
+                <span style={{ fontSize: 26, lineHeight: 1 }}>{emoji}</span>
+                <span style={{ fontSize: 11, color: isActive ? 'var(--accent)' : 'var(--text-muted)', fontWeight: isActive ? 600 : 400 }}>
                   {label}
                 </span>
               </NavLink>
             )
           })}
-          {/* ログアウトボタン */}
-          <button onClick={handleLogout} style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', gap: 3, padding: '8px 0 4px',
-            background: 'none', border: 'none', cursor: 'pointer',
-          }}>
-            <span style={{ fontSize: 20, lineHeight: 1 }}>👤</span>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>設定</span>
+          <button
+            onClick={() => setShowSettings(true)}
+            style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 4, padding: '10px 0 6px',
+              background: 'none', border: 'none', cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: 26, lineHeight: 1 }}>⚙️</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>設定</span>
           </button>
         </div>
       </nav>
+
+      {showSettings && (
+        <SettingsSheet session={session} onClose={() => setShowSettings(false)} />
+      )}
     </div>
   )
 }
