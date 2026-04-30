@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Search, ChevronRight, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Search, ChevronRight, Pencil, Trash2, MoreVertical } from 'lucide-react'
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../lib/supabase'
 import { formatPrice, formatDate } from '../lib/utils'
 import Modal from '../components/Modal'
 import { LowestPriceBadge } from '../components/PriceBadge'
 
 function btnStyle(variant) {
-  const base = {
-    padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 500,
-    cursor: 'pointer', border: 'none', transition: 'all 0.15s', fontFamily: 'inherit'
-  }
+  const base = { padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none', transition: 'all 0.15s', fontFamily: 'inherit' }
   if (variant === 'primary') return { ...base, background: 'var(--accent)', color: '#000' }
   if (variant === 'ghost') return { ...base, background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }
   return base
@@ -56,12 +53,45 @@ function ProductForm({ initial, onSave, onClose }) {
   )
 }
 
+// スマホ用 操作メニュー
+function MobileActionMenu({ product, onEdit, onDelete, onClose }) {
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end' }}
+    >
+      <div style={{ width: '100%', background: 'var(--bg-surface)', borderRadius: '16px 16px 0 0', border: '1px solid var(--border)', padding: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
+        <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px', color: 'var(--text-primary)' }}>{product.name}</p>
+        <button
+          onClick={() => { onEdit(); onClose() }}
+          style={{ width: '100%', padding: '13px', borderRadius: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <Pencil size={16} /> 編集
+        </button>
+        <button
+          onClick={() => { onDelete(); onClose() }}
+          style={{ width: '100%', padding: '13px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--red)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <Trash2 size={16} /> 削除
+        </button>
+        <button
+          onClick={onClose}
+          style={{ width: '100%', padding: '13px', borderRadius: 10, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          キャンセル
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function Products() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
+  const [menuTarget, setMenuTarget] = useState(null)
 
   const load = () => {
     setLoading(true)
@@ -69,11 +99,7 @@ export default function Products() {
   }
   useEffect(load, [])
 
-  const summaries = products.map(p => {
-    return p
-  })
-
-  const filtered = summaries.filter(p =>
+  const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     (p.category || '').toLowerCase().includes(search.toLowerCase()) ||
     (p.code || '').toLowerCase().includes(search.toLowerCase())
@@ -93,7 +119,7 @@ export default function Products() {
           <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 2px' }}>商品一覧</h1>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>{products.length}件登録</p>
         </div>
-        <button onClick={() => setShowCreate(true)} style={{ ...btnStyle('primary'), display: 'flex', alignItems: 'center', gap: 5, padding: '8px 12px' }}>
+        <button onClick={() => setShowCreate(true)} style={{ ...btnStyle('primary'), display: 'flex', alignItems: 'center', gap: 5, padding: '10px 14px' }}>
           <Plus size={14} /> 追加
         </button>
       </div>
@@ -151,21 +177,30 @@ export default function Products() {
         {loading ? (
           <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>読み込み中...</p>
         ) : filtered.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>{search ? '該当なし' : '右上の「追加」から商品を登録してください'}</p>
+          <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>{search ? '該当なし' : '「追加」から商品を登録してください'}</p>
         ) : filtered.map(p => (
-          <Link key={p.id} to={`/products/${p.id}`} style={{ textDecoration: 'none', display: 'block', marginBottom: 10 }}>
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                <div>
-                  <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {p.name}
-                    {p.latest_price != null && p.latest_price <= p.lowest_price && <LowestPriceBadge />}
-                  </div>
-                  {p.category && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p.category}</div>}
+          <div key={p.id} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', marginBottom: 10 }}>
+            {/* カードヘッダー */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+              <Link to={`/products/${p.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {p.name}
+                  {p.latest_price != null && p.latest_price <= p.lowest_price && <LowestPriceBadge />}
                 </div>
-                <ChevronRight size={14} color="var(--text-muted)" />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {p.category && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{p.category}</div>}
+              </Link>
+              {/* 3点メニュー */}
+              <button
+                onClick={() => setMenuTarget(p)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 6, flexShrink: 0 }}
+              >
+                <MoreVertical size={18} />
+              </button>
+            </div>
+
+            {/* 価格情報 */}
+            <Link to={`/products/${p.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
                 <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: '7px 8px', textAlign: 'center' }}>
                   <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 3 }}>最新価格</div>
                   <div style={{ fontSize: 13, fontWeight: 600, fontFamily: 'IBM Plex Mono', color: 'var(--accent)' }}>{p.latest_price != null ? formatPrice(p.latest_price) : '—'}</div>
@@ -179,11 +214,12 @@ export default function Products() {
                   <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{formatDate(p.latest_date)}</div>
                 </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          </div>
         ))}
       </div>
 
+      {/* モーダル類 */}
       {showCreate && (
         <Modal title="商品を追加" onClose={() => setShowCreate(false)}>
           <ProductForm onSave={addProd} onClose={() => setShowCreate(false)} />
@@ -193,6 +229,15 @@ export default function Products() {
         <Modal title="商品を編集" onClose={() => setEditTarget(null)}>
           <ProductForm initial={editTarget} onSave={editProd} onClose={() => setEditTarget(null)} />
         </Modal>
+      )}
+      {/* スマホ 操作メニュー */}
+      {menuTarget && (
+        <MobileActionMenu
+          product={menuTarget}
+          onEdit={() => setEditTarget(menuTarget)}
+          onDelete={() => delProd(menuTarget.id)}
+          onClose={() => setMenuTarget(null)}
+        />
       )}
     </div>
   )
